@@ -186,6 +186,7 @@ func (f *apiHandler) iplookup(writer writerFunc) http.HandlerFunc {
 		err = f.db.Lookup(ip, &q.DefaultQuery)
 		if err != nil {
 			http.Error(w, "Try again later.", http.StatusServiceUnavailable)
+			log.Fatal(err)
 			return
 		}
 		w.Header().Set("X-Database-Date", f.db.Date().Format(http.TimeFormat))

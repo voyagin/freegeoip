@@ -32,6 +32,26 @@ Create service to expose to the internet:
 $ kubectl create -f service.yml
 ```
 
+### Enabling logging to Stackdriver
+
+This should be done only once, for eg. when creating a new cluster, or perhaps after migrating to a new cluster.
+
+```
+$ kubectl apply -f ./k8s/configmap-fluentd.yml
+$ kubectl apply -f ./k8s/daemonset-fluentd.yml
+```
+
+To check if they are running with all their might:
+
+```
+$ kubectl get pods --namespace=kube-system
+
+fluentd-gcp-v2.0-dzrcd             2/2       Running   0          39s
+fluentd-gcp-v2.0.17-844ss          2/2       Running   0          1h
+fluentd-gcp-v2.0.17-mf5mt          2/2       Running   0          1h
+fluentd-gcp-v2.0.17-xsqsm          2/2       Running   0          1h
+```
+
 ### Re-deploy
 
 ```

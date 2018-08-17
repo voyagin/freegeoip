@@ -1,7 +1,7 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: vgeoip-app
+  name: vgeoip-app-svc
   labels:
     # Project ID
     app: voyagin-prod

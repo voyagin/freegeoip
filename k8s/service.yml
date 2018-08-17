@@ -1,5 +1,5 @@
+apiVersion: extensions/v1beta1
 kind: Service
-apiVersion: v1
 metadata:
   # Service name
   name: vgeoip-app-svc

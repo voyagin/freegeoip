@@ -25,13 +25,13 @@ $ gcloud docker -- push gcr.io/voyagin-prod/vgeoip:1.0.0
 Create deployment:
 
 ```
-$ kubectl create -f deployment.yml
+$ kubectl create -f ./k8s/deployment.yml
 ```
 
 Create service to expose to the internet:
 
 ```
-$ kubectl create -f service.yml
+$ kubectl create -f ./k8s/service.yml
 ```
 
 ### Migrating to another node pool
@@ -130,6 +130,20 @@ fluentd-gcp-v2.0.17-xsqsm          2/2       Running   0          1h
 ```
 
 To see the logs in GCP, visit Stackdriver Logging (you may need an access permission to be able to visit this page), and then at the "Logs" section, choose "GKE Container, cluster-vgeoip" and all the logs should be there.
+
+![logs](https://user-images.githubusercontent.com/166730/44245140-45441180-a212-11e8-8912-9ec18005d004.png)
+
+We can also see the log of individual pods:
+
+```
+$ kubectl get pods
+NAME                         READY     STATUS    RESTARTS   AGE
+vgeoip-app-9594657b8-b7r7z   1/1       Running   0          17m
+vgeoip-app-9594657b8-dpvt6   1/1       Running   0          17m
+vgeoip-app-9594657b8-ff6br   1/1       Running   0          17m
+$ kubectl logs vgeoip-app-9594657b8-ff6br
+2018/08/17 02:23:30 freegeoip http server starting on :8080
+```
 
 ### Re-deploy
 

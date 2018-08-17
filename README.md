@@ -150,27 +150,3 @@ $ kubectl logs vgeoip-app-9594657b8-ff6br
 ```
 $ kubectl edit -f deployment.yml
 ```
-
-### Misc
-
-Get all pods in the cluster:
-
-```
-$ kubectl get pods
-```
-
-Which will return something like:
-
-```
-NAME                          READY     STATUS    RESTARTS   AGE
-vgeoip-app-77c47d8894-2m7x9   0/1       Unknown   6          1h
-vgeoip-app-77c47d8894-5qwf5   0/1       Pending   0          2m
-vgeoip-app-77c47d8894-9zqrm   1/1       Unknown   5          29m
-vgeoip-app-77c47d8894-j92wm   0/1       Pending   0          2m
-```
-
-We can get some logs from the pods:
-
-```
-$ kubectl logs vgeoip-app-77c47d8894-2m7x9
-```

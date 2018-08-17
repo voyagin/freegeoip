@@ -22,3 +22,6 @@ spec:
             - containerPort: 8080
           args:
             - "-public /var/www"
+          env:
+            - name: LOGTOSTDOUT
+              value: "true"

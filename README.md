@@ -150,3 +150,35 @@ $ kubectl logs vgeoip-app-9594657b8-ff6br
 ```
 $ kubectl edit -f deployment.yml
 ```
+
+### Getting access to the dashboard
+
+![kube dashboard](https://user-images.githubusercontent.com/166730/44316324-ff7f8700-a465-11e8-8c16-c68b5d08e810.png)
+
+In case you would like to login to monitor the memory usage, we can make use of the Kubernates dashboard. 
+
+First, run the following command:
+
+```
+$ kubectl proxy
+$ kubectl -n kube-system get secret
+...
+pvc-protection-controller-token-k47sh
+replicaset-controller-token-lglsm    
+replication-controller-token-fpkwr   
+resourcequota-controller-token-bch45 
+...
+```
+
+Choose the one with `replicaset`, and get the token as follow:
+
+```
+$ kubectl -n kube-system describe secret replicaset-controller-token-lglsm
+Data
+====
+ca.crt:     1115 bytes
+namespace:  11 bytes
+token:      eyJhbGciOiJSUzI....
+```
+
+Copy the token over to [Kubernetes dashboard](http://127.0.0.1:8001/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy/#!/overview?namespace=default) served over the proxy.

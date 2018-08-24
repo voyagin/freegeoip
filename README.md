@@ -44,7 +44,7 @@ However, before it can serve any request, `NewHandler` turns out will also attem
 
 `openDB` basically will download a databse if it doesn't have a copy yet in the local filesystem. And, if we have the license and user ID, it will setup a special configuration that will help us later on to download the paid version of the database.
 
-`openDB` eventually is calling `OpenURL` function of the `freegeoip` package (located in `db.go`). This package contains routines that help with:
+`openDB` eventually is calling `OpenURL` function of the `freegeoip` package (only associated with `db.go`). This package contains routines that help with:
 
 - Downloading the database
 - Opening the database, and setting up the reader/data-access object

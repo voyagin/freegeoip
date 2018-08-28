@@ -1,0 +1,27 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: vgeoip-app-svc
+  labels:
+    # Project ID
+    app: voyagin-prod
+spec:
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: voyagin-prod
+    spec:
+      # Container details
+      containers:
+        - name: vgeoip-app
+          image: gcr.io/voyagin-prod/vgeoip:1.0.0
+          imagePullPolicy: Always
+          #Ports to expose
+          ports:
+            - containerPort: 8080
+          args:
+            - "-public /var/www"
+          env:
+            - name: LOGTOSTDOUT
+              value: "true"

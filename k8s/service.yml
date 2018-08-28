@@ -1,0 +1,13 @@
+apiVersion: extensions/v1beta1
+kind: Service
+metadata:
+  # Service name
+  name: vgeoip-app-svc
+spec:
+  selector:
+    app: voyagin-prod
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+  type: LoadBalancer

@@ -1,257 +1,238 @@
-# freegeoip - Important Announcement
+# VGEOIP Service for Voyagin
 
-*[The old freegeoip API is now deprecated and will be discontinued on July 1st, 2018]*
+This service is based on the original [Apilayer's Freegeoip project](https://github.com/apilayer/freegeoip), with a little modifications.
 
-Launched more than 6 years ago, the freegeoip.net API has grown into one of the biggest and most widely used APIs for IP to location services worldwide. The API is used by thousands of developers, SMBs and large corporations around the globe and is currently handling more than 2 billion requests per day. After years of operation and the API remaining almost unchanged, today we announce the complete re-launch of freegeoip into a faster, more advanced and more scalable API service called ipstack (https://ipstack.com). All users that wish to continue using our IP to location service will be required to sign up to obtain a free API access key and perform a few simple changes to their integration. While the new API offers the ability to return data in the same structure as the old freegeoip API, the new API structure offers various options of delivering much more advanced data for IP Addresses.
+## VGEOIP
 
-## Required Changes to Legacy Integrations (freegeoip.net/json/xml) 
+VGEOIP service primary function is to do geolocation based on IP. It could help detect the city, the country, and so on and so forth.
 
-As of March 31 2018 the old freegeoip API is deprecated and a completely re-designed API is now accessible at http://api.ipstack.com. While the new API offers the same capabilities as the old one and also has the option of returning data in the legacy format, the API URL has now changed and all users are required to sign up for a free API Access Key to use the service.
+## Technical overview
 
-1. Get a free ipstack Account and Access Key
+There are 3 separate, inter-related parts of VGEOIP:
 
-Head over to https://ipstack.com and follow the instructions to create your account and obtain your access token. If you only need basic IP to Geolocation data and do not require more than 10,000 requests per month, you can use the free account. If you'd like more advanced features or more requests than included in the free account you will need to choose one of the paid options. You can find an overview of all available plans at https://ipstack.com/product
+- `apiserver` package (located at `freegreoip/apiserver`)
+- `main` package (located at `freegeoip/cmd/freegeoip`)
+- `freegeoip` package (located at the root folder)
 
-2. Integrate the new API URL
+The `main` package is the point of entry. This is definitely the package that gets compiled. This package however, is just a _gate_ into `apiserver`, so the actual workload is basically not in the `main` package but in `apiserver.Run()`.
 
-The new API comes with a completely new endpoint (api.ipstack.com) and requires you to append your API Access Key to the URL as a GET parameter. For complete integration instructions, please head over to the API Documentation at https://ipstack.com/documentation. While the new API offers a completely reworked response structure with many additional data points, we also offer the option to receive results in the old freegeoip.net format in JSON or XML.
+> The service is not complicated although it seems like there is a room for improvement. For instance, why do a separation of package is required between `apiserver` and `freegeoip`.
 
-To receive your API results in the old freegeoip format, please simply append &legacy=1 to the new API URL. 
+Things that `apiserver` package does:
 
-JSON Example: http://api.ipstack.com/186.116.207.169?access_key=YOUR_ACCESS_KEY&output=json&legacy=1
+| Description | File |
+|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------|
+| - Read configuration from env. var.<br/>- Setup the configuration object.<br/>- Some of interesting envvar:newrelic config, where to log, DB update interval | config.go |
+| - Record database events to prometheus.<br/>- Record country code of the clients to prometheus - Record IP versions counter to prometheus.<br/>- Record the number of active client per protocol to prometheus | metrics.go |
+| - Essentially running the server (using TLS/not) | main.go |
+| - Return data in CSV/JSON/XML format upon request.<br/>- Perform IP lookup.<br/>- Downloading the lookup database.<br/>- Performing rate limiting (if configured). | api.go |
 
-XML Example: http://api.ipstack.com/186.116.207.169?access_key=YOUR_ACCESS_KEY&output=xml&legacy=1
+The core component of the `apiserver` package is the `NewConfig` and `NewHandler` functions that both create a `Config` and `apiHandler` struct respectively. `apiHandler` is a struct that consist the following structure:
 
-## New features with ipstack
-While the new ipstack service now runs on a commercial/freemium model, we have worked hard at building a faster, more scalable, and more advanced IP to location API product. You can read more about all the new features by navigating to https://ipstack.com, but here's a list of the most important changes and additions:
-
-- We're still free for basic usage
-
-While we now offer paid / premium options for our more advanced users, our core product and IP to Country/Region/City product is still completely free of charge for up to 10,000 requests per month. If you need more advanced data or more requests, you can choose one of the paid plans listed at https://ipstack.com/product
-
--  Batch Requests
-
-Need to validate more than 1 IP Address in a single API Call? Our new Bulk Lookup Feature (available on our paid plans) allows you to geolocate up to 50 IP Addresses in a single API Call.
-
-- Much more Data
-
-While the old freegeoip API was limited to provide only the most basic IP to location data, our new API provides more than 20 additional data points including Language, Time Zone, Current Time, Currencies, Connection & ASN Information, and much more. To learn more about all the data points available, please head over to the ipstack website.
-
-- Security & Fraud Prevention Tools
-
-Do you want to prevent fraudulent traffic from arriving at your website or from abusing your service? Easily spot malicious / proxy / VPN traffic by using our new Security Module, which outputs a lot of valuable security information about an IP Address.
-
-Next Steps
-
-- Deprecation of the old API
-
-While we want to keep the disruption to our current users as minimal as possible, we are planning to shut the old API down on July 1st, 2018. This should give all users enough time to adapt to changes, and should we still see high volumes of traffic going to the old API by that date, we may decide to extend it further. In any case, we highly recommend you switch to the new API as soon as possible. We will keep you posted here about any changes to the planned shutdown date.
-
-- Any Questions? Please get in touch!
-
-It's very important to ensure a smooth transition to ipstack for all freegeoip API users. If you are a developer that has published a plugin/addon that includes the legacy API, we recommend you get in touch with us and also share this announcement with your users. If you have any questions about the transition or the new API, please get in touch with us at support@ipstack.com
-
-
-
-
-
-
-
-
-
-
-
-# freegeoip - Deprecated Documentation
-
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
-
-This is the source code of the freegeoip software. It contains both the web server that empowers freegeoip.net, and a package for the [Go](http://golang.org) programming language that enables any web server to support IP geolocation with a simple and clean API.
-
-See http://en.wikipedia.org/wiki/Geolocation for details about geolocation.
-
-Developers looking for the Go API can skip to the [Package freegeoip](#packagefreegeoip) section below.
-
-## Running
-
-This section is for people who desire to run the freegeoip web server on their own infrastructure. The easiest and most generic way of doing this is by using Docker. All examples below use Docker.
-
-### Docker
-
-#### Install Docker
-
-Docker has [install instructions for many platforms](https://docs.docker.com/engine/installation/),
-including
-- [Ubuntu](https://docs.docker.com/engine/installation/linux/docker-ce/ubuntu/)
-- [CentOS](https://docs.docker.com/engine/installation/linux/docker-ce/centos/)
-- [Mac](https://docs.docker.com/docker-for-mac/install/)
-
-#### Run the API in a container
-
-```bash
-docker run --restart=always -p 8080:8080 -d apilayer/freegeoip
+```go
+type apiHandler struct {
+  db    *freegeoip.DB
+  conf  *Config
+  cors  *cors.Cors
+  nrapp newrelic.Application
+}
 ```
 
-#### Test
+However, `NewHandler` does not just create `apiHandler` struct, it actually also create the multiplexer from which all requests come in contact with. So, every single web request is handled by this multiplexer.
 
-```bash
-curl localhost:8080/json/1.2.3.4
-# => {"ip":"1.2.3.4","country_code":"US","country_name":"United States", # ...
+However, before it can serve any request, `NewHandler` turns out will also attempt to download a database using the `openDB` function of the same package (`apiserver`).  When the system unable to setup the handler (for a host of reasons, one of which being unable to download the database), the system will fatally exit.
+
+`openDB` basically will download a databse if it doesn't have a copy yet in the local filesystem. And, if we have the license and user ID, it will setup a special configuration that will help us later on to download the paid version of the database.
+
+`openDB` eventually is calling `OpenURL` function of the `freegeoip` package (only associated with `db.go`). This package contains routines that help with:
+
+- Downloading the database
+- Opening the database, and setting up the reader/data-access object
+- Watching the file when it's created/modified and notify it through appropriate channel back up
+- Automatically update the database upon a due time/`backoff` period (default: 1 day)
+- Performing `Lookup` of an IP
+
+Once `OpenURL` is called, an `autoUpdate` function will kick in automatically in the background using a goroutine (similar to a Ruby's thread but lightweight). It will check if a newer database exist by checking the `X-Database-MD5` and the file's size.
+
+As we might already guess, there are two kinds of database: the paid version and the free version. If we run the service without the paid license, it will never send a request to download the paid version of the database.
+
+## Deployment: Kubernetes-style
+
+It's advised that we use at minimum G1 machine type. We have tried using F1 before, but the machine became very unstable with a lot of restarts and crashes, and general unavailability. It's known that both F1 and G1 are shared vCPU, and that F1 shares 20% of the whole CPU whereby G1 is 60% of the total CPU usage.
+
+### Deploying to a new cluster
+
+Build the docker:
+
+```
+$ docker build -t gcr.io/voyagin-prod/vgeoip:1.0.0 .
 ```
 
-### Other Linux, OS X, FreeBSD, and Windows
+Note: please increment the version/tag in someway. Also, we may change `voyagin-prod` with other project ID if necessary. The project ID can easily be located in the Google Console dashboard of said project.
 
-There are [pre-compiled binaries](https://github.com/apilayer/freegeoip/releases) available.
+Push to GCR (Google Container Registry):
 
-### Production configuration
-
-For production workloads you may want to use different configuration for the freegeoip web server, for example:
-
-* Enabling the "internal server" for collecting metrics and profiling/tracing the freegeoip web server on demand
-* Monitoring the internal server using [Prometheus](https://prometheus.io), or exporting your metrics to [New Relic](https://newrelic.com)
-* Serving the freegeoip API over HTTPS (TLS) using your own certificates, or provisioned automatically using [LetsEncrypt.org](https://letsencrypt.org)
-* Configuring [HSTS](https://en.wikipedia.org/wiki/HTTP_Strict_Transport_Security) to restrict your browser clients to always use HTTPS
-* Configuring the read and write timeouts to avoid stale clients consuming server resources
-* Configuring the freegeoip web server to read the client IP (for logs, etc) from the X-Forwarded-For header when running behind a reverse proxy
-* Configuring [CORS](https://en.wikipedia.org/wiki/Cross-origin_resource_sharing) to restrict access to your API to specific domains
-* Configuring a specific endpoint path prefix other than the default "/" (thus /json, /xml, /csv) to serve the API alongside other APIs on the same host
-* Optimizing your round trips by enabling [TCP Fast Open](https://en.wikipedia.org/wiki/TCP_Fast_Open) on your OS and the freegeoip web server
-* Setting up usage limits (quotas) for your clients (per client IP) based on requests per time interval; we support various backends such as in-memory map (for single instance), or redis or memcache for distributed deployments
-* Serve the default [GeoLite2 City](http://dev.maxmind.com/geoip/geoip2/geolite2/) free database that is downloaded and updated automatically in background on a configurable schedule, or
-* Serve the commercial [GeoIP2 City](https://www.maxmind.com/en/geoip2-city) database from MaxMind, either as a local file that you provide and update periodically (so the server can reload it), or configured to be downloaded periodically using your API key
-
-See the [Server Options](#serveroptions) section below for more information on configuring the server.
-
-For automation, check out the [freegeoip chef cookbook](https://supermarket.chef.io/cookbooks/freegeoip) or the (legacy) [Ansible Playbook](./cmd/freegeoip/ansible-playbook) for Ubuntu 14.04 LTS.
-
-<a name="serveroptions">
-
-### Server Options
-
-To see all the available options, use the `-help` option:
-
-```bash
-docker run --rm -it apilayer/freegeoip -help
+```
+$ gcloud docker -- push gcr.io/voyagin-prod/vgeoip:1.0.0
 ```
 
-If you're using LetsEncrypt.org to provision your TLS certificates, you have to listen for HTTPS on port 443. Following is an example of the server listening on 3 different ports: metrics + pprof (8888), http (80), and https (443):
+Create deployment:
 
-```bash
-docker run -p 8888:8888 -p 80:8080 -p 443:8443 -d apilayer/freegeoip \
-	-internal-server=:8888 \
-	-http=:8080 \
-	-https=:8443 \
-	-hsts=max-age=31536000 \
-	-letsencrypt \
-	-letsencrypt-hosts=myfancydomain.io
+```
+$ kubectl create -f ./k8s/deployment.yml
 ```
 
- You can configure the freegeiop web server via command line flags or environment variables. The names of environment variables are the same for command line flags, but prefixed with FREEGEOIP, all upperscase, separated by underscores. If you want to use environment variables instead:
+Create service to expose to the internet:
 
-```bash
-$ cat prod.env
-FREEGEOIP_INTERNAL_SERVER=:8888
-FREEGEOIP_HTTP=:8080
-FREEGEOIP_HTTPS=:8443
-FREEGEOIP_HSTS=max-age=31536000
-FREEGEOIP_LETSENCRYPT=true
-FREEGEOIP_LETSENCRYPT_HOSTS=myfancydomain.io
-
-$ docker run --env-file=prod.env -p 8888:8888 -p 80:8080 -p 443:8443 -d apilayer/freegeoip
+```
+$ kubectl create -f ./k8s/service.yml
 ```
 
-By default, HTTP/2 is enabled over HTTPS. You can disable by passing the `-http2=false` flag.
+### Migrating to another node pool
 
-Also, the Docker image of freegeoip does not provide the web page from freegeiop.net, it only provides the API. If you want to serve that page, you can pass the `-public=/var/www` parameter in the command line. You can also tell Docker to mount that directory as a volume on the host machine and have it serve your own page, using Docker's `-v` parameter.
+In the future we may want to upgrade our machine type to a higher one, or maybe even downgrading it. Before doing that however, we should try to have more nodes instead rather than to scale it vertically. Since this app does not require extensive computation, scaling it horizontally may be all that we need.
 
-If the freegeoip web server is running behind a reverse proxy or load balancer, you have to run it passing the `-use-x-forwarded-for` parameter and provide the `X-Forwarded-For` HTTP header in all requests. This is for the freegeoip web server be able to log the client IP, and to perform geolocation lookups when an IP is not provided to the API, e.g. `/json/` (uses client IP) vs `/json/1.2.3.4`.
+Nevertheless, let's see how we can migrate from one machine type to another machine type.
 
-## Database
+First, we can check what kind of pools we have:
 
-The current implementation uses the free [GeoLite2 City](http://dev.maxmind.com/geoip/geoip2/geolite2/) database from MaxMind.
-
-In the past we had databases from other providers, and at some point even our own database comprised of data from different sources. This means it might change in the future.
-
-If you have purchased the commercial database from MaxMind, you can point the freegeoip web server or (Go API, for dev) to the URL containing the file, or local file, and the server will use it.
-
-In case of files on disk, you can replace the file with a newer version and the freegeoip web server will reload it automatically in background. If instead of a file you use a URL (the default), we periodically check the URL in background to see if there's a new database version available, then download the reload it automatically.
-
-All responses from the freegeiop API contain the date that the database was downloaded in the X-Database-Date HTTP header.
-
-## API
-
-The freegeoip API is served by endpoints that encode the response in different formats.
-
-Example:
-
-```bash
-curl freegeoip.net/json/
+```
+$ gcloud container node-pools list --cluster cluster-vgeoip --region asia-northeast1
+NAME     MACHINE_TYPE  DISK_SIZE_GB  NODE_VERSION
+g1-pool  g1-small      50            1.9.7-gke.5
 ```
 
-Returns the geolocation information of your own IP address, the source IP address of the connection.
+Then, prepare a new node pool. We can do that [through a beautiful UI](https://console.cloud.google.com/kubernetes/clusters/details/asia-northeast1/cluster-vgeoip):
 
-You can pass a different IP or hostname. For example, to lookup the geolocation of `github.com` the server resolves the name first, then uses the first IP address available, which might be IPv4 or IPv6:
+1. Open the cluster page
+2. Click Edit
+3. Click Add node pool
+4. Configure what kind of node pool we would like to have
+4. Save
 
-```bash
-curl freegeoip.net/json/github.com
+The next step, we will configure it through the command line. For the sake of completeness, we can also use the following command line tool to spawn a new node pool:
+
+```
+$ gcloud container node-pools create some-new-pool --cluster=cluster-vgeoip \
+  --machine-type=n1-highmem-2 --num-nodes=3
 ```
 
-Same semantics are available for the `/xml/{ip}` and `/csv/{ip}` endpoints.
+The following command will then list all the pools that the cluster has:
 
-JSON responses can be encoded as JSONP, by adding the `callback` parameter:
-
-```bash
-curl freegeoip.net/json/?callback=foobar
+```
+$ kubectl get nodes
+NAME                                             STATUS    ROLES     AGE       VERSION
+gke-cluster-vgeoip-g1-pool-0819df37-1lhd         Ready     <none>    22h       v1.9.7-gke.5
+gke-cluster-vgeoip-g1-pool-4faa1bb5-4psb         Ready     <none>    22h       v1.9.7-gke.5
+gke-cluster-vgeoip-g1-pool-689dc04a-hsb0         Ready     <none>    22h       v1.9.7-gke.5
+gke-cluster-vgeoip-some-new-pool-ab19gh37-1mnd   Ready     <none>    5s        v1.9.7-gke.5
+gke-cluster-vgeoip-some-new-pool-cdaaijb5-4pop   Ready     <none>    8s        v1.9.7-gke.5
+gke-cluster-vgeoip-some-new-pool-ef9djk4a-hsrs   Ready     <none>    5s        v1.9.7-gke.5
 ```
 
-The callback parameter is ignored on all other endpoints.
+Cool! Next, we need to _cordon_ the old pools. Cordoning pool make it _unschedulable_, so this node won't accommodate a pod anymore. After we cordon it, we will evicts the workloads on the original, old node pool to the new one in a graceful manner.
 
-## Metrics and profiling
+To cordon it:
 
-The freegeoip web server can provide metrics about its usage, and also supports runtime profiling and tracing.
+```
+$ for node in $(kubectl get nodes -l cloud.google.com/gke-nodepool=g1-pool -o=name); do
+  kubectl cordon "$node";
+done
+```
 
-Both are disabled by default, but can be enabled by passing the `-internal-server` parameter in the command line. Metrics are generated for [Prometheus](http://prometheus.io) and can be queried at `/metrics` even with curl.
+Replace `g1-pool` above with the pool name of which we want to cordon.
 
-HTTP pprof is available at `/debug/pprof` and the examples from the [pprof](https://golang.org/pkg/net/http/pprof/) package documentation should work on the freegeiop web server.
+If we run `kubectl get nodes` we would see nodes of `g1-pool` having a `SchedulingDisabled` status.
 
-<a name="packagefreegeoip">
+And then, now we can drain it (also change `g1-pool` appropriately):
 
-## Package freegeoip
 
-The freegeoip package for the Go programming language provides two APIs:
+```
+$ for node in $(kubectl get nodes -l cloud.google.com/gke-nodepool=g1-pool -o=name); do
+  kubectl drain --force --ignore-daemonsets --delete-local-data --grace-period=10 "$node";
+done
+```
 
-- A database API that requires zero maintenance of the IP database;
-- A geolocation `http.Handler` that can be used/served by any http server.
+Now we can delete the old pool:
 
-tl;dr if all you want is code then see the `example_test.go` file.
+```
+$ gcloud container node-pools delete g1-pool --cluster cluster-vgeoip --region asia-northeast1
+```
 
-Otherwise check out the godoc reference.
+Done. In case there are issues with steps above (perhaps the CLI no longer support some command), please feel free to refer to the [original documentation](https://cloud.google.com/kubernetes-engine/docs/tutorials/migrating-node-pool).
 
-[![GoDoc](https://godoc.org/github.com/apilayer/freegeoip?status.svg)](https://godoc.org/github.com/apilayer/freegeoip)
-[![Build Status](https://secure.travis-ci.org/apilayer/freegeoip.png)](http://travis-ci.org/apilayer/freegeoip)
-[![GoReportCard](https://goreportcard.com/badge/github.com/apilayer/freegeoip)](https://goreportcard.com/report/github.com/apilayer/freegeoip)
+### Enabling logging to Stackdriver
 
-### Features
+This should be done only once, for eg. when creating a new cluster, or perhaps after migrating to a new cluster.
 
-- Zero maintenance
+First of all, ensure the the [Stackdriver Logging API is enabled](https://console.developers.google.com/apis/library/logging.googleapis.com?project=voyagin-prod).
 
-The DB object alone can download an IP database file from the internet and service lookups to your program right away. It will auto-update the file in background and always magically work.
+```
+$ kubectl apply -f ./k8s/configmap-fluentd.yml
+$ kubectl apply -f ./k8s/daemonset-fluentd.yml
+```
 
-- DevOps friendly
+To check if they are running with all their might:
 
-If you do care about the database and have the commercial version of the MaxMind database, you can update the database file with your program running and the DB object will load it in background. You can focus on your stuff.
+```
+$ kubectl get pods --namespace=kube-system
 
-- Extensible
+fluentd-gcp-v2.0-dzrcd             2/2       Running   0          39s
+fluentd-gcp-v2.0.17-844ss          2/2       Running   0          1h
+fluentd-gcp-v2.0.17-mf5mt          2/2       Running   0          1h
+fluentd-gcp-v2.0.17-xsqsm          2/2       Running   0          1h
+```
 
-Besides the database part, the package provides an `http.Handler` object that you can add to your HTTP server to service IP geolocation lookups with the same simplistic API of freegeoip.net. There's also an interface for crafting your own HTTP responses encoded in any format.
+To see the logs in GCP, visit Stackdriver Logging (you may need an access permission to be able to visit this page), and then at the "Logs" section, choose "GKE Container, cluster-vgeoip" and all the logs should be there.
 
-### Install
+![logs](https://user-images.githubusercontent.com/166730/44245140-45441180-a212-11e8-8912-9ec18005d004.png)
 
-Download the package:
+We can also see the log of individual pods:
 
-	go get -d github.com/apilayer/freegeoip/...
+```
+$ kubectl get pods
+NAME                         READY     STATUS    RESTARTS   AGE
+vgeoip-app-9594657b8-b7r7z   1/1       Running   0          17m
+vgeoip-app-9594657b8-dpvt6   1/1       Running   0          17m
+vgeoip-app-9594657b8-ff6br   1/1       Running   0          17m
+$ kubectl logs vgeoip-app-9594657b8-ff6br
+2018/08/17 02:23:30 freegeoip http server starting on :8080
+```
 
-Install the web server:
+### Re-deploy
 
-	go install github.com/apilayer/freegeoip/cmd/freegeoip
+```
+$ kubectl edit -f deployment.yml
+```
 
-Test coverage is quite good, and test code may help you find the stuff you need.
+### Getting access to the dashboard
+
+![kube dashboard](https://user-images.githubusercontent.com/166730/44316324-ff7f8700-a465-11e8-8c16-c68b5d08e810.png)
+
+In case you would like to login to monitor the memory usage, we can make use of the Kubernates dashboard. 
+
+First, run the following command:
+
+```
+$ kubectl proxy
+$ kubectl -n kube-system get secret
+...
+pvc-protection-controller-token-k47sh
+replicaset-controller-token-lglsm    
+replication-controller-token-fpkwr   
+resourcequota-controller-token-bch45 
+...
+```
+
+Choose the one with `replicaset`, and get the token as follow:
+
+```
+$ kubectl -n kube-system describe secret replicaset-controller-token-lglsm
+Data
+====
+ca.crt:     1115 bytes
+namespace:  11 bytes
+token:      eyJhbGciOiJSUzI....
+```
+
+Copy the token over to [Kubernetes dashboard](http://127.0.0.1:8001/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy/#!/overview?namespace=default) served over the proxy.

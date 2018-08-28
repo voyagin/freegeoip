@@ -63,6 +63,7 @@ func NewHandler(c *Config) (http.Handler, error) {
 	mux.GET("/csv/*host", f.register("csv", csvWriter))
 	mux.GET("/xml/*host", f.register("xml", xmlWriter))
 	mux.GET("/json/*host", f.register("json", jsonWriter))
+	mux.GET("/ping", f.register("ping", ping))
 	go watchEvents(db)
 	return mux, nil
 }
@@ -222,6 +223,10 @@ func jsonWriter(w http.ResponseWriter, r *http.Request, d *responseRecord) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(d)
+}
+
+func ping(w http.ResponseWriter, r *http.Request, d *responseRecord) {
+	io.WriteString(w, "pong")
 }
 
 type geoipQuery struct {

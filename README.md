@@ -80,10 +80,13 @@ $ pip install awscli
 $ $(aws ecr get-login --no-include-email --region ap-northeast-1)
 ```
 
+- Obtain the Maxmind license key by signing up with a free account: https://www.maxmind.com/en/geolite2/signup
+
 - Build the docker image:
+Replace `LICENSE_KEY` with the license key you have from your Maxmind account
 
 ```
-$ docker build . -t vgeoip:latest
+$ docker build . -t vgeoip:latest --build-arg INITIAL_DATABASE_URL="https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-City&suffix=tar.gz&license_key=LICENSE_KEY"
 ```
 
 To see list of available images:
@@ -113,3 +116,7 @@ $ docker tag vgeoip:latest 607558961840.dkr.ecr.ap-northeast-1.amazonaws.com/vge
   ```
   $ docker push 607558961840.dkr.ecr.ap-northeast-1.amazonaws.com/vgeoip:latest
   ```
+
+## Deployment: Heroku
+Add ENV `INITIAL_DATABASE_URL` with "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-City&suffix=tar.gz&license_key=LICENSE_KEY"
+where LICENSE_KEY is the Maxmind license key after signing up a free account: https://www.maxmind.com/en/geolite2/signup

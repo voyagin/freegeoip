@@ -185,6 +185,7 @@ func (f *apiHandler) iplookup(writer writerFunc) http.HandlerFunc {
 		ip, q := ips[rand.Intn(len(ips))], &geoipQuery{}
 		err = f.db.Lookup(ip, &q.DefaultQuery)
 		if err != nil {
+			log.Println("[Error] => ", err)
 			http.Error(w, "Try again later.", http.StatusServiceUnavailable)
 			return
 		}

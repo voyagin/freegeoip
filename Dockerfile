@@ -11,6 +11,9 @@ RUN \
 	apt-get clean && rm -rf /var/lib/apt/lists/* && \
 	useradd -ms /bin/bash freegeoip
 
+ARG INITIAL_DATABASE_URL
+ENV INITIAL_DATABASE_URL=${INITIAL_DATABASE_URL}
+
 USER freegeoip
 ENTRYPOINT ["/go/bin/freegeoip"]
 
